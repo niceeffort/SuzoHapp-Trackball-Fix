@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <chrono>
 #include <iostream>
+#include <fstream>
 #include "interception.h"
 #include "utils.h"
 
@@ -11,6 +12,10 @@ enum ScanCode
 
 int main()
 {
+	//std::ofstream dataFile;
+	//dataFile.open("data.txt");
+
+
 	InterceptionContext context;
 	InterceptionDevice device;
 	InterceptionStroke stroke;
@@ -22,10 +27,10 @@ int main()
 
 	auto lastTimeStamp = std::chrono::system_clock::now();
 	int lastValue = 0;
-	int OverrideCount = 0;
-	int OverrideDuration = 20;
-	int maxYMovement = -50;
-	int accelThreshold = -100000;
+	int overrideCount = 0;
+	int overrideDuration = 60;
+	int maxYMovement = -60;
+	int accelThreshold = -90000;
 
 	while (interception_receive(context, device = interception_wait(context), &stroke, 1) > 0) {
 
@@ -37,33 +42,40 @@ int main()
 
 			if (!(mstroke.flags & INTERCEPTION_MOUSE_MOVE_ABSOLUTE)) {
 
-				if (OverrideCount != 0) {
+				auto timeStamp = std::chrono::system_clock::now();
+				auto duration = timeStamp.time_since_epoch();
+
+				if (overrideCount != 0) {
 					mstroke.y = maxYMovement;
-					OverrideCount--;
-					if (OverrideCount == 0) {
+					overrideCount--;
+					/*
+					if (overrideCount == 0) {
 						std::wcout << "---stop injecting---" << std::endl;
+					}*/
+				}
+				else
+				{
+					std::chrono::duration<double> diffInTimestamps = timeStamp - lastTimeStamp;
+					double diffInTimestampsSquared = pow(diffInTimestamps.count(), 2);
+
+					double accel = 0;
+					if (diffInTimestampsSquared != 0) {
+						accel = (mstroke.y - lastValue) / (diffInTimestampsSquared);
+					}
+
+					//std::wcout << accel << " ---- " << mstroke.y << ' ' << lastValue << ' ' << ' ' << originalYValue << ' ' << diffInTimestamps.count() << ' ' << std::endl;
+					//dataFile << duration.count() << ',' << originalYValue << ',' << mstroke.y << std::endl;
+					
+					if (accel < accelThreshold) {
+						//std::wcout << "---start injecting---" << std::endl;
+						mstroke.y = maxYMovement;
+						overrideCount = overrideDuration;
 					}
 				}
-
-				auto timeStamp = std::chrono::system_clock::now();
-				std::chrono::duration<double> diffInTimestamps = timeStamp - lastTimeStamp;
-				double diffInTimestampsSquared = pow(diffInTimestamps.count(), 2);
-
-				double accel = 0;
-				if (diffInTimestampsSquared != 0) {
-					accel = (mstroke.y - lastValue) / (diffInTimestampsSquared);
-				}
-
-				std::wcout << accel << " ---- " << mstroke.y << ' ' << lastValue << ' ' << ' ' << originalYValue << ' ' << diffInTimestamps.count() << ' ' << std::endl;
 
 				lastTimeStamp = timeStamp;
 				lastValue = mstroke.y;
 
-				if (accel < accelThreshold) {
-					std::wcout << "---start injecting---" << std::endl;
-					mstroke.y = maxYMovement;
-					OverrideCount = OverrideDuration;
-				}
 				interception_send(context, device, &stroke, 1);
 			}
 		}
@@ -73,11 +85,12 @@ int main()
 
 			interception_send(context, device, &stroke, 1);
 
-			if (kstroke.code == SCANCODE_ESC) break;
+			//if (kstroke.code == SCANCODE_ESC) break;
 		}
 	}
 
 	interception_destroy_context(context);
+	//dataFile.close();
 
 	return 0;
 }
