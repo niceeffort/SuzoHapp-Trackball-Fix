@@ -103,10 +103,11 @@ int main()
 			}
 		}
 
+		/*
 		if (interception_is_keyboard(device)) {
 			InterceptionKeyStroke& kstroke = *(InterceptionKeyStroke*)&stroke;
 			std::wcout << "keyboard" << kstroke.code << std::endl;
-			/*
+			
 			if (kstroke.code == SCANCODE_R) {
 				std::ofstream dataFile;
 				recCount++;
@@ -120,8 +121,9 @@ int main()
 				dataFile.close();
 			}
 			//if (kstroke.code == SCANCODE_ESC) break;
-			*/
+			
 		}
+		*/
 	}
 
 	interception_destroy_context(context);
