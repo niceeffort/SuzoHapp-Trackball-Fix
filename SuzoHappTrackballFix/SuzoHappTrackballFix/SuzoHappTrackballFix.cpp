@@ -102,6 +102,10 @@ int main()
 				interception_send(context, device, &stroke, 1);
 			}
 		}
+		else
+		{
+			interception_send(context, device, &stroke, 1);
+		}
 
 		/*
 		if (interception_is_keyboard(device)) {
