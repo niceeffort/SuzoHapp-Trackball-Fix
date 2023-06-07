@@ -1,0 +1,4 @@
+1) Download Interception https://github.com/oblitum/interception/releases/tag/v1.0.1
+2) Follow the Driver Installation instructions here: https://github.com/oblitum/Interception
+3) Ensure the SuzoHappTrackballFix.exe and Interception.dll are in the same directory
+4) double click the SuzoHappTrackballFix.exe or set it up to run at startup
